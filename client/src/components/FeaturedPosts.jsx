@@ -1,81 +1,86 @@
-import axios from "axios";
 import { Link } from "react-router-dom";
-import Image from "./Image";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "timeago.js";
+import CoverImage from "./CoverImage";
+import { api, errorMessage } from "../lib/api";
 
-const fetchPost = async () => {
-    const res = await axios.get(`${import.meta.env.VITE_API_URL}/posts?featured=true&limit=4&sort=newest`);
-    return res.data;
-}
+const fetchFeatured = async () => {
+  const res = await api.get("/posts", { params: { featured: true, limit: 4, sort: "newest" } });
+  return res.data;
+};
+
+const Meta = ({ post, index }) => (
+  <div className="flex items-center gap-4 text-sm lg:text-base">
+    <span className="font-semibold">{String(index).padStart(2, "0")}.</span>
+    <Link to={`/posts?cat=${encodeURIComponent(post.category)}`} className="text-blue-800">
+      {post.category}
+    </Link>
+    <span className="text-secondary-text-color">{format(post.createdAt)}</span>
+  </div>
+);
 
 const FeaturedPosts = () => {
-    const { isLoading, error, data } = useQuery({
-        queryKey: ["featuredPosts"],
-        queryFn: () => fetchPost(),
-    });
+  const { isPending, error, data } = useQuery({
+    queryKey: ["featuredPosts"],
+    queryFn: fetchFeatured,
+  });
 
-    if (isLoading) return "Loading...";
+  if (isPending) return <p className="text-secondary-text-color">Loading...</p>;
+  if (error) {
+    return <p className="text-red-700">{errorMessage(error, "Could not load featured posts")}</p>;
+  }
 
-    if (error) return "An error has occured" + error.message;
+  const posts = data.posts ?? [];
+  if (posts.length === 0) {
+    return <p className="text-secondary-text-color">No featured posts yet.</p>;
+  }
 
-    const posts = data.posts;
-    if (!posts || posts.length === 0) return;
+  const [lead, ...rest] = posts;
 
-    return (
-        <div className="rounded-2xl bg-white p-8 flex flex-col lg:flex-row gap-8 shadow-xl">
-            <div className="w-full lg:w-1/2 flex flex-col gap-4">
-                {posts[0].img && <Image src={posts[0].img} className="rounded-3xl object-cover" w="795" h="500"/>}
-                <div className="flex items-center gap-4">
-                    <h1 className="font-semibold lg:text-lg">01.</h1>
-                    <Link className="text-blue-800 lg:text-lg">{posts[0].category}</Link>
-                    <span className="text-gray-500">{format(posts[0].createdAt)}</span>
-                </div>
-                <Link to={`/${posts[0].slug}`} className="text-xl lg:text-3xl font-semibold lg:font-bold">{posts[0].title}</Link>
+  return (
+    <div className="rounded-2xl bg-white p-6 md:p-8 flex flex-col lg:flex-row gap-8 shadow-xl">
+      <div className="w-full lg:w-1/2 flex flex-col gap-4">
+        <CoverImage
+          src={lead.img}
+          className="rounded-3xl object-cover w-full"
+          w="795"
+          h="500"
+          alt={lead.title}
+        />
+        <Meta post={lead} index={1} />
+        <Link to={`/${lead.slug}`} className="text-xl lg:text-3xl font-semibold lg:font-bold">
+          {lead.title}
+        </Link>
+      </div>
+
+      {/* The three secondary slots were copy-pasted three times, each with
+          slightly different widths and a hard-coded index. */}
+      <div className="w-full lg:w-1/2 flex flex-col gap-4">
+        {rest.map((post, i) => (
+          <div key={post._id} className="flex justify-between gap-4">
+            <div className="w-1/3">
+              <CoverImage
+                src={post.img}
+                className="rounded-3xl object-cover w-full h-full"
+                w="298"
+                h="200"
+                alt={post.title}
+              />
             </div>
-            <div className="w-full lg:w-1/2 flex flex-col gap-4">
-                {posts[1] && <div className="lg:h-1/3 flex justify-between gap-4">
-                    <div className="w-1/3 aspect-video">
-                    {posts[1].img && <Image src={posts[1].img} className="rounded-3xl object-cover w-full h-full" w="298" />}
-                    </div>
-                    <div className="w-2/3">
-                        <div className="flex items-center gap-4 text-sm lg:text-base">
-                            <h1 className="text-semibold">02.</h1>
-                            <Link className="text-blue-800">{posts[1].category}</Link>
-                            <span className="text-gray-800 text-sm">{format(posts[1].createdAt)}</span>
-                        </div>
-                        <Link to={`/${posts[1].slug}`} className="text-base sm:text-lg md:text-2xl lg:text-xl xl:text-2xl font-medium">{posts[1].title}</Link>
-                    </div>
-                </div>}
-                {posts[2] && <div className="lg:h-1/3 flex justify-between gap-4">
-                    <div className="w-1/3 aspect-video">
-                    {posts[2].img && <Image src={posts[2].img} className="rounded-3xl object-cover w-full h-full" w="398" />}
-                    </div>
-                    <div className="w-2/3">
-                        <div className="flex items-center gap-4 text-sm lg:text-base">
-                            <h1 className="text-semibold">03.</h1>
-                            <Link className="text-blue-800">{posts[2].category}</Link>
-                            <span className="text-gray-800 text-sm">{format(posts[2].createdAt)}</span>
-                        </div>
-                        <Link to={`/${posts[2].slug}`} className="text-base sm:text-lg md:text-2xl lg:text-xl xl:text-2xl font-medium">{posts[2].title}</Link>
-                    </div>
-                </div>}
-                {posts[3] && <div className="lg:h-1/3 flex justify-between gap-4">
-                    <div className="w-1/3 aspect-video">
-                    {posts[3].img && <Image src={posts[3].img} className="rounded-3xl object-cover w-full h-full" w="398" />}
-                    </div>
-                    <div className="w-2/3">
-                        <div className="flex items-center gap-4 text-sm lg:text-base">
-                            <h1 className="text-semibold">04.</h1>
-                            <Link className="text-blue-800">{posts[3].category}</Link>
-                            <span className="text-gray-800 text-sm">{format(posts[3].createdAt)}</span>
-                        </div>
-                        <Link to={`/${posts[3].slug}`} className="text-base sm:text-lg md:text-2xl lg:text-xl xl:text-2xl font-medium">{posts[3].title}</Link>
-                    </div>
-                </div>}
+            <div className="w-2/3 flex flex-col gap-1">
+              <Meta post={post} index={i + 2} />
+              <Link
+                to={`/${post.slug}`}
+                className="text-base sm:text-lg md:text-2xl lg:text-xl xl:text-2xl font-medium"
+              >
+                {post.title}
+              </Link>
             </div>
-        </div>
-    )
-}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 export default FeaturedPosts;

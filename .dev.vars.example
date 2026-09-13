@@ -1,0 +1,21 @@
+# Local development secrets for the Worker (`wrangler dev` reads this file).
+# Copy to .dev.vars and fill in. Never commit .dev.vars.
+
+# MongoDB Atlas connection string (SRV form works on Workers).
+MONGO_URI="mongodb+srv://user:password@cluster.example.mongodb.net/?retryWrites=true&w=majority"
+MONGO_DB_NAME="btechlogs"
+
+# Clerk -> API keys
+CLERK_SECRET_KEY="sk_test_..."
+CLERK_PUBLISHABLE_KEY="pk_test_..."
+
+# Clerk -> Webhooks -> signing secret for the /api/webhooks/clerk endpoint.
+CLERK_WEBHOOK_SECRET="whsec_..."
+
+# Comma-separated origins allowed to authenticate (defence in depth for Clerk
+# cookie auth). Leave unset to skip the check.
+# CLERK_AUTHORIZED_PARTIES="https://btechlogs.com,http://localhost:5173"
+
+# ImageKit -> Developer options. Only the private key is a secret; the public
+# key and URL endpoint are baked into the client bundle via client/.env.
+IK_PRIVATE_KEY="private_..."

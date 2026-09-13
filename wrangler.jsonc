@@ -1,0 +1,33 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "btechlogs",
+  "main": "server/src/index.js",
+  "compatibility_date": "2026-09-01",
+
+  // The MongoDB driver needs node:net / node:tls / node:crypto. Compatibility
+  // dates from 2026-08-04 enable this implicitly, but it is listed explicitly
+  // so the dependency is obvious if the date is ever rolled back.
+  "compatibility_flags": ["nodejs_compat"],
+
+  "assets": {
+    // Built by `npm run build` (vite build in ./client).
+    "directory": "client/dist",
+    "binding": "ASSETS",
+    // Unknown paths fall through to index.html so react-router can handle them.
+    "not_found_handling": "single-page-application",
+    // Everything else is asset-first; only the API reaches the Worker.
+    "run_worker_first": ["/api/*"]
+  },
+
+  "observability": {
+    "enabled": true
+  },
+
+  "vars": {
+    "MONGO_DB_NAME": "btechlogs"
+  }
+
+  // Secrets (set with `wrangler secret put <NAME>`, or in .dev.vars locally):
+  //   MONGO_URI, CLERK_SECRET_KEY, CLERK_PUBLISHABLE_KEY, CLERK_WEBHOOK_SECRET,
+  //   IK_PRIVATE_KEY
+}
